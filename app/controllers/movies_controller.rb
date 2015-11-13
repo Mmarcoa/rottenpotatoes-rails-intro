@@ -11,8 +11,15 @@ class MoviesController < ApplicationController
   end
 
   def index
+    @ratings=[]
     @movies = Movie.all
-#    @hilite = 'j'
+    @movies.each do |movie|
+      @ratings << movie.rating
+    end
+    @all_ratings = @ratings.uniq
+    if params[:ratings]
+      ''
+    end
     if params[:order] == "title"
       @movies = Movie.order("lower(title)")
       @hilite_title = 'hilite'
@@ -20,6 +27,7 @@ class MoviesController < ApplicationController
       @movies = Movie.order("release_date")
       @hilite_release = 'hilite'
     end
+    @debug_params = params
   end
 
   def new
