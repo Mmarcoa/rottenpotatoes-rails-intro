@@ -11,15 +11,26 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @ratings=[]
+    # Código para obtener el array @all_ratings de la base de datos
     @movies = Movie.all
-    @movies.each do |movie|
-      @ratings << movie.rating
-    end
-    @all_ratings = @ratings.uniq
+    @all_ratings = @movies.pluck(:rating).uniq
+    @checks = ['checked']*@all_ratings.size
+        
     if params[:ratings]
-      ''
+      @checked_ratings = params[:ratings].keys
+      @movies = Movie.where(rating: @checked_ratings)
+      
+      @checks = []
+      @all_ratings.each do |rating|
+        if @checked_ratings.include?(rating)
+          @checks << 'checked'
+        else
+          @checks << nil
+        end  
+      end
     end
+    
+    # Código para ordenar por título y por fecha de estreno
     if params[:order] == "title"
       @movies = Movie.order("lower(title)")
       @hilite_title = 'hilite'
@@ -27,6 +38,8 @@ class MoviesController < ApplicationController
       @movies = Movie.order("release_date")
       @hilite_release = 'hilite'
     end
+    
+    # Variable para debug
     @debug_params = params
   end
 
