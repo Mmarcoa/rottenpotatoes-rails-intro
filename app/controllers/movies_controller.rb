@@ -12,13 +12,28 @@ class MoviesController < ApplicationController
 
   def index
     # Código para obtener el array @all_ratings de la base de datos
-    @movies = Movie.all
-    @all_ratings = @movies.pluck(:rating).uniq
-    @checks = ['checked']*@all_ratings.size
-        
+    @movies = Movie.where(rating: session[:ratings].keys).order(session[:order]) || Movie.all
+    @all_ratings = Movie.pluck(:rating).uniq
+    # @checks = ['checked']*@all_ratings.size
+    @hilite_title = 'hilite' if session[:order] == 'title' 
+    @hilite_release = 'hilite' if session[:order] == 'release_date'
+    
+    @checks2 = []
+    @all_ratings.each do |rating|
+      if session[:ratings].keys.include?(rating)
+        @checks2 << 'checked'
+      else
+        @checks2 << nil
+      end  
+    end
+    @checks = @checks2 || ['checked']*@all_ratings.size        
+    
     if params[:ratings]
+      @hilite_title = 'hilite' if session[:order] == 'title'
+      @hilite_release = 'hilite' if session[:order] == 'release_date'
+      session[:ratings] = params[:ratings]
       @checked_ratings = params[:ratings].keys
-      @movies = Movie.where(rating: @checked_ratings)
+      @movies = Movie.where(rating: @checked_ratings).order(session[:order])
       
       @checks = []
       @all_ratings.each do |rating|
@@ -28,19 +43,25 @@ class MoviesController < ApplicationController
           @checks << nil
         end  
       end
+      session[:checks]=@checks
     end
     
     # Código para ordenar por título y por fecha de estreno
     if params[:order] == "title"
-      @movies = Movie.order("lower(title)")
+      session[:order] = 'title'
+      @movies = Movie.where(rating: session[:ratings].keys).order("lower(title)") || Movie.order("lower(title)")
       @hilite_title = 'hilite'
     elsif params[:order] == "release_date"
-      @movies = Movie.order("release_date")
+      session[:order] = 'release_date'
+      @movies = Movie.where(rating: session[:ratings].keys).order("release_date") || Movie.order("release_date")
       @hilite_release = 'hilite'
     end
     
     # Variable para debug
-    @debug_params = params
+      @debug_params = params
+      @session_ratings = session[:ratings]
+      @session_checks = session[:checks]
+      @session_order = session[:order]
   end
 
   def new

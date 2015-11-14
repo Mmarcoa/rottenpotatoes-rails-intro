@@ -3,6 +3,13 @@
 
 %div
   = @debug_params
+  %br
+  = @session_ratings
+  %br
+  = @session_checks
+  %br
+  = @session_order
+  
   
 = form_tag movies_path, :id => 'ratings_form', :method => :get do
   Include:
