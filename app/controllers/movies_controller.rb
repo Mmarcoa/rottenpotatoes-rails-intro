@@ -58,10 +58,10 @@ class MoviesController < ApplicationController
     end
     
     # Variable para debug
-      @debug_params = params
-      @session_ratings = session[:ratings]
-      @session_checks = session[:checks]
-      @session_order = session[:order]
+     # @debug_params = params
+      #@session_ratings = session[:ratings]
+      #@session_checks = session[:checks]
+      #@session_order = session[:order]
   end
 
   def new
