@@ -23,6 +23,7 @@ class MoviesController < ApplicationController
   end
 
   def index
+
     @all_ratings = Movie.pluck(:rating).uniq
     # params completo?
     if params[:order] && params[:ratings]
@@ -49,7 +50,7 @@ class MoviesController < ApplicationController
       end
       redirect_to movies_path(params)        
       
-    elsif !params[:ratings] && !params[:order] && session
+    elsif (!params[:ratings]) && (!params[:order]) && (session[:ratings] || session[:order])
       params[:ratings] = session[:ratings]
       params[:order] = session[:order]
       if flash[:notice]
