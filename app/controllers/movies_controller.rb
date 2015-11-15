@@ -81,11 +81,6 @@ class MoviesController < ApplicationController
       @checks = ['checked']*@all_ratings.size
     end
     
-    # Variable para debug
-    @debug_params = params
-    @session_ratings = session[:ratings]
-    @session_checks = session.keys
-    @session_order = session[:order]
   end
 
   def new
