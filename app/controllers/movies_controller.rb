@@ -3,6 +3,18 @@ class MoviesController < ApplicationController
   def movie_params
     params.require(:movie).permit(:title, :rating, :description, :release_date)
   end
+  
+  def checkboxes(all_ratings, checked)
+    @checks = []
+    all_ratings.each do |rating|
+      if checked.include?(rating)
+        @checks << 'checked'
+      else
+        @checks << nil
+      end  
+    end
+    return @checks    
+  end
 
   def show
     id = params[:id] # retrieve movie ID from URI route
@@ -11,57 +23,69 @@ class MoviesController < ApplicationController
   end
 
   def index
-    # Código para obtener el array @all_ratings de la base de datos
-    @movies = Movie.where(rating: session[:ratings].keys).order(session[:order]) || Movie.all
     @all_ratings = Movie.pluck(:rating).uniq
-    # @checks = ['checked']*@all_ratings.size
-    @hilite_title = 'hilite' if session[:order] == 'title' 
-    @hilite_release = 'hilite' if session[:order] == 'release_date'
-    
-    @checks2 = []
-    @all_ratings.each do |rating|
-      if session[:ratings].keys.include?(rating)
-        @checks2 << 'checked'
-      else
-        @checks2 << nil
-      end  
-    end
-    @checks = @checks2 || ['checked']*@all_ratings.size        
-    
-    if params[:ratings]
-      @hilite_title = 'hilite' if session[:order] == 'title'
-      @hilite_release = 'hilite' if session[:order] == 'release_date'
+    # params completo?
+    if params[:order] && params[:ratings]
+      # Ordenar y filtrar con params completo @movies
+      @movies = Movie.where(rating: params[:ratings].keys).order(params[:order])
+      # Control de 'hilite'
+      params[:order] == 'title' ? @hilite_title = 'hilite' : @hilite_release = 'hilite'
+      # Colocar en una función, control de checkboxes @checks
+      @checks = checkboxes(@all_ratings, params[:ratings].keys)
+
+    elsif params[:order] && session[:ratings]
+      session[:order] = params[:order]
+      params[:ratings] = session[:ratings]
+      if flash[:notice]
+        flash.keep
+      end
+      redirect_to movies_path(params)
+      
+    elsif params[:ratings] && session[:order]
+      session[:ratings] = params[:ratings]
+      params[:order] = session[:order]
+      if flash[:notice]
+        flash.keep
+      end
+      redirect_to movies_path(params)        
+      
+    elsif !params[:ratings] && !params[:order] && session
+      params[:ratings] = session[:ratings]
+      params[:order] = session[:order]
+      if flash[:notice]
+        flash.keep
+      end
+      redirect_to movies_path(params)      
+          
+    elsif params[:ratings]
       session[:ratings] = params[:ratings]
       @checked_ratings = params[:ratings].keys
-      @movies = Movie.where(rating: @checked_ratings).order(session[:order])
-      
-      @checks = []
-      @all_ratings.each do |rating|
-        if @checked_ratings.include?(rating)
-          @checks << 'checked'
-        else
-          @checks << nil
-        end  
-      end
-      session[:checks]=@checks
-    end
-    
-    # Código para ordenar por título y por fecha de estreno
-    if params[:order] == "title"
+      @movies = Movie.where(rating: params[:ratings].keys)
+      @checks = checkboxes(@all_ratings, params[:ratings].keys)
+
+    elsif params[:order] == "title"
       session[:order] = 'title'
-      @movies = Movie.where(rating: session[:ratings].keys).order("lower(title)") || Movie.order("lower(title)")
+      @movies = Movie.order("lower(title)")
       @hilite_title = 'hilite'
-    elsif params[:order] == "release_date"
+      @checks = ['checked']*@all_ratings.size
+
+    elsif params[:order] == 'release_date'
       session[:order] = 'release_date'
-      @movies = Movie.where(rating: session[:ratings].keys).order("release_date") || Movie.order("release_date")
-      @hilite_release = 'hilite'
+      @movies = Movie.order("release_date")
+      @hilite_release = 'hilite'      
+      @checks = ['checked']*@all_ratings.size
+           
+    else
+      # Movie.all
+      @movies = Movie.all
+      @checks = ['checked']*@all_ratings.size
     end
     
     # Variable para debug
-     # @debug_params = params
-      #@session_ratings = session[:ratings]
-      #@session_checks = session[:checks]
-      #@session_order = session[:order]
+    @debug_params = params
+    @session_ratings = session[:ratings]
+    @session_checks = session.keys
+    @session_order = session[:order]
   end
 
   def new
